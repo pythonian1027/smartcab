@@ -67,7 +67,7 @@ class LearningAgent(Agent):
         # TODO: Update state
         curr_state = self.env.sense(self)      
         curr_state['next_waypoint'] = self.planner.next_waypoint()
-
+        self.state = curr_state
         #state <- ['light', 'oncoming', 'left', 'right', 'next_waypoint']        
         # TODO: Select action according to your policy
         #chooses a random action if random is lesser than currect epsilon
@@ -114,18 +114,53 @@ class LearningAgent(Agent):
 
 def run():
     """Run the agent for a finite number of trials."""
+    gammaSet = [0.2, 0.4, 0.6, 0.8]
+    epsSet = [0.3, 0.5, 0.7, 0.9]
+    results = list()
+    iterLen = 10
+    import timeit
+    start = timeit.timeit()
+    for gamma in gammaSet:
+        for eps_0 in epsSet:    
+            perf_tracker = list()
+            penalty_tracker = list()
+            for k in xrange(iterLen): # runs X times 100 trials and records 
+                e = Environment()  #create environment (also adds some dummy traffic)
+                a = e.create_agent(LearningAgent, gamma = gamma, eps_0 = eps_0)  # create agent
+                e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+                # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+            
+                # Now simulate it
+                sim = Simulator(e, update_delay=0.0001, display = False)  # create simulator (uses pygame when display=True, if available)
+                # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+            
+                sim.run(n_trials=a.total_trials)  # run for a specified number of trials
+                # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
-    e = Environment()  #create environment (also adds some dummy traffic)
-    a = e.create_agent(LearningAgent, gamma = 0.2, eps_0 = 0.5)  # create agent
-    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
-
-    # Now simulate it
-    sim = Simulator(e, update_delay=0.0001, display = False)  # create simulator (uses pygame when display=True, if available)
-    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
-
-    sim.run(n_trials=a.total_trials)  # run for a specified number of trials
-    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+                #records the performance of the last 10 trials into perf_tracker                
+                perf_tracker.append(sim.perf)
+                
+                                            
+            print perf_tracker        
+            print penalty_tracker
+            print "total score: " + str(sum(perf_tracker)/iterLen)
+            
+            results.append((gamma, eps_0, sum(perf_tracker)/iterLen ))
+            
+    print results
+    end = timeit.timeit()
+    print "elapsed time: " + str(-start  + end)        
+#    e = Environment()  #create environment (also adds some dummy traffic)
+#    a = e.create_agent(LearningAgent, gamma = 0.2, eps_0 = 0.5)  # create agent
+#    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+#    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+#
+#    # Now simulate it
+#    sim = Simulator(e, update_delay=0.0001, display = False)  # create simulator (uses pygame when display=True, if available)
+#    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+#
+#    sim.run(n_trials=a.total_trials)  # run for a specified number of trials
+#    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
 
 if __name__ == '__main__':
@@ -133,42 +168,7 @@ if __name__ == '__main__':
 
 #==============================================================================
 # Debug Code
-#    gammaSet = [0.2, 0.4, 0.6, 0.8]
-#    epsSet = [0.3, 0.5, 0.7, 0.9]
-#    results = list()
-#    iterLen = 10
-#    import timeit
-#    start = timeit.timeit()
-#    for gamma in gammaSet:
-#        for eps_0 in epsSet:    
-#            perf_tracker = list()
-#            penalty_tracker = list()
-#            for k in xrange(iterLen): # runs X times 100 trials and records 
-#                e = Environment()  #create environment (also adds some dummy traffic)
-#                a = e.create_agent(LearningAgent, gamma = gamma, eps_0 = eps_0)  # create agent
-#                e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-#                # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
-#            
-#                # Now simulate it
-#                sim = Simulator(e, update_delay=0.0001, display = False)  # create simulator (uses pygame when display=True, if available)
-#                # NOTE: To speed up simulation, reduce update_delay and/or set display=False
-#            
-#                sim.run(n_trials=a.total_trials)  # run for a specified number of trials
-#                # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-#
-#                #records the performance of the last 10 trials into perf_tracker                
-#                perf_tracker.append(sim.perf)
-#                
-#                                            
-#            print perf_tracker        
-#            print penalty_tracker
-#            print "total score: " + str(sum(perf_tracker)/iterLen)
-#            
-#            results.append((gamma, eps_0, sum(perf_tracker)/iterLen ))
-#            
-#    print results
-#    end = timeit.timeit()
-#    print "elapsed time: " + str(-start  + end)        
+
 #==============================================================================
 
 
